@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends,HTTPException
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from .service import Auth_service
 from src.db.main import get_session
-from .schemas import SignupModel,SignupResponse,LoginModel
+from .schemas import SignupModel,SignupResponse,LoginModel,UserRead
 from .utils import Verify_hash,create_access_token,create_refresh_access_token
 from fastapi.responses import JSONResponse
 from .dependecies import RefreshTokenBearer,AccessTokenBearer, get_current_user, Rolechecker
@@ -12,6 +12,7 @@ from src.db.redis import add_token_to_blocklist
 auth_router = APIRouter()
 auth_service = Auth_service()
 roles = Rolechecker(["user","admin","staff"])
+workers_role = Depends(Rolechecker(["admin","staff"]))
 
 @auth_router.post("/signup",response_model=SignupResponse)
 async def Signup(user_data:SignupModel,session:AsyncSession=Depends(get_session)):
@@ -53,6 +54,6 @@ async def Logout(Token_details:dict =Depends(AccessTokenBearer())):
      await add_token_to_blocklist(JTI)
      return JSONResponse(content={"message": "Successfully logged out"})
 
-@auth_router.get("/me",response_model=SignupResponse)
-async def Me(current_user: dict = Depends(get_current_user)):#,_:bool=Depends(Rolechecker)):
+@auth_router.get("/me",response_model=UserRead)
+async def Me(current_user: dict = Depends(get_current_user),_:bool=Depends(Rolechecker(workers_role))):
     return current_user

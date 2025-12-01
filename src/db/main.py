@@ -5,10 +5,6 @@ from sqlalchemy.orm import sessionmaker
 from src.config import Config
 from src.db.models import User,Orders,Reviews
 
-
-
-
-
 engine= create_async_engine(Config.DATABASE_URL,echo=True)
 async def init_db():
     async with engine.begin() as con:

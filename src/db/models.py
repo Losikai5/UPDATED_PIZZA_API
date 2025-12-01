@@ -15,6 +15,7 @@ class User(SQLModel, table=True):
     role:str = Field(sa_column=Column(pg.VARCHAR,nullable=False,server_default="user"))
     Order: List["Orders"] = Relationship(back_populates="user")
     Review: List["Reviews"] = Relationship(back_populates="user")
+    is_verified: bool = Field(default=False)
     password_hash:str
     created_at:datetime=Field(sa_column=Column(pg.TIMESTAMP,server_default = func.now()))
     updated_at:datetime=Field(sa_column=Column(pg.TIMESTAMP,server_default = func.now()))

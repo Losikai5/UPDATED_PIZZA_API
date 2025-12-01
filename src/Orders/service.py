@@ -15,9 +15,13 @@ class OrdersService:
         result = await session.exec(statement)
         return result.first()
     
-    async def create_order(self, order_data: OrderCreate, session: AsyncSession):
+    async def Get_order_by_user(self, user_id: str, session: AsyncSession):
+        statement = select(Orders).where(Orders.user_id == user_id).order_by(desc(Orders.placed_at))
+        result = await session.exec(statement)
+        return result.first()
+    async def create_order(self, order_data: OrderCreate,user_id: str ,session: AsyncSession):
         new_order = order_data.model_dump()
-        order = Orders(**new_order)
+        order = Orders(**new_order, user_id=user_id)
         session.add(order)
         await session.commit()
         await session.refresh(order)

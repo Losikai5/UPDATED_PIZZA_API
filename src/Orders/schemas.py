@@ -4,21 +4,11 @@ from typing import Optional
 from enum import Enum
 import uuid
 
-class PizzaSize(str, Enum):
-    SMALL = "small"
-    MEDIUM = "medium"
-    LARGE = "large"
-    EXTRA_LARGE = "extra_large"
-
-class OrderStatus(str, Enum):
-    PENDING = "pending"
-    IN_TRANSIT = "in_transit"
-    DELIVERED = "delivered"
 
 class OrderCreate(BaseModel):
     Quantity: int
-    Order_status: OrderStatus
-    pizza_size: PizzaSize
+    Order_status: str
+    pizza_size: str
     flavour: str
     
     class Config:
@@ -34,8 +24,8 @@ class OrderCreate(BaseModel):
 
 class OrderUpdate(BaseModel):
     Quantity: Optional[int] = None
-    Order_status: Optional[OrderStatus] = None
-    pizza_size: Optional[PizzaSize] = None
+    Order_status: Optional[str] = None
+    pizza_size: Optional[str] = None
     flavour: Optional[str] = None
     
     class Config:
@@ -52,8 +42,8 @@ class OrderUpdate(BaseModel):
 class OrderRead(BaseModel):
     uid: uuid.UUID
     Quantity: int
-    Order_status: OrderStatus
-    pizza_size: PizzaSize
+    Order_status: str
+    pizza_size: str
     flavour: str
     placed_at: datetime
     
