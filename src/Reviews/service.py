@@ -21,8 +21,8 @@ class ReviewsService:
     
     async def Create_review(self, review_data: ReviewCreate, session: AsyncSession):
              new_review = review_data.model_dump()
-             review = Reviews(**new_review)  # Create the model instance
-             session.add(review)  # Add the instance, not unpack it with **
+             review = Reviews(**new_review)  
+             session.add(review) 
              await session.commit()
              await session.refresh(review)
              return review
@@ -51,12 +51,7 @@ async def delete_review_to_from_book(self, review_uid: str, user_email: str, ses
         review = await self.Get_review_by_id(review_uid, session)
 
         if not review or (review.user is not user):
-            raise HTTPException(
-                detail="Cannot delete this review",
-                status_code=403,
-            )
-
+            raise HTTPException(detail="Cannot delete this review",status_code=403)
         session.add(review)
-
         await session.commit()              
               
