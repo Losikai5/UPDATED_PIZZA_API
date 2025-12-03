@@ -44,6 +44,7 @@ class Reviews(SQLModel,table=True):
     __tablename__="reviews"
     uid:uuid.UUID = Field(sa_column=Column(pg.UUID,primary_key=True,default=uuid.uuid4,nullable=False))
     Comment:str
+    Rating:int= Field(sa_column=Column(pg.INTEGER,nullable=False))  
     user_id:Optional[uuid.UUID]=Field(foreign_key="users.uid",default=None)
     Orders_review:Optional[uuid.UUID]=Field(foreign_key="orders.uid",default=None)
     user:Optional["User"]= Relationship(back_populates="Review")
