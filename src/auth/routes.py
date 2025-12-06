@@ -23,7 +23,7 @@ async def Send_verification_email(emails:EmailModel):
     html = "<p>Please click the link below to verify your email address:</p>"
     message = CreateMail(recipients=email, subject="Email Verification", body=html)
     await mail.send_message(message)
-    return JSONResponse(content={"message": "Verification email sent"})
+    return JSONResponse(content={"message": "Verification email sent"},status_code=200)
 
 
 @auth_router.get("/verify_email/{token}")
@@ -38,7 +38,8 @@ async def Verify_email(token:str,session:AsyncSession=Depends(get_session)):
     if not user:
         raise HTTPException(status_code=404,detail="User not found")
     await auth_service.update_user(user,{"is_verified":True},session)
-    return JSONResponse(content={"message": "Email verified successfully"})
+    return JSONResponse(content={"message": "Email verified successfully"},status_code=200)
+    
     
 
 
