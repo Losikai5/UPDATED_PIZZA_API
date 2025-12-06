@@ -4,6 +4,7 @@ from datetime import timedelta,datetime
 import uuid
 import logging
 from src.config import Config
+from itsdangerous import URLSafeTimedSerializer
 
 pwd_hash = CryptContext(schemes=["bcrypt"],deprecated = "auto")
 ACCESS_TIME_MINUTES = 60
@@ -41,4 +42,16 @@ def decode_token(token:str):
      except Exception as e:
           logging.exception(e)
           return None
+     
+serializer = URLSafeTimedSerializer(Config.JWT_SECRET, salt="email-verification-salt")     
+def generate_email_verification_token(data:dict) -> str:
+    token = serializer.dumps(data)  
+    return token
+def verify_email_verification_token(token: str) -> dict | None:
+    try:
+        data = serializer.loads(token)
+        return data
+    except Exception as e:
+        logging.exception(str(e))
+        return None
            

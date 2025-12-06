@@ -42,7 +42,6 @@ class ReviewsService:
                   await session.commit()
                   await session.refresh(reviews)
                   return reviews
-                  return reviews
               except Exception as e:
                     raise HTTPException(status_code=500, detail=str(e))
               

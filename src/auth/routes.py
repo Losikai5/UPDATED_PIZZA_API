@@ -1,26 +1,61 @@
 from fastapi import APIRouter, Depends,HTTPException
 from sqlalchemy.ext.asyncio.session import AsyncSession
+from src.config import Config
 from .service import Auth_service
 from src.db.main import get_session
-from .schemas import SignupModel,SignupResponse,LoginModel,UserRead
-from .utils import Verify_hash,create_access_token,create_refresh_access_token
+from .schemas import SignupModel,SignupResponse,LoginModel,UserRead,EmailModel
+from .utils import Verify_hash,create_access_token,create_refresh_access_token,generate_email_verification_token,verify_email_verification_token
 from fastapi.responses import JSONResponse
 from .dependecies import RefreshTokenBearer,AccessTokenBearer, get_current_user, Rolechecker
 from datetime import datetime,timedelta, timezone
 from src.db.redis import add_token_to_blocklist
+from src.mail import mail,CreateMail
 
 auth_router = APIRouter()
 auth_service = Auth_service()
 roles = Rolechecker(["user","admin","staff"])
 workers_role = Depends(Rolechecker(["admin","staff"]))
 
-@auth_router.post("/signup",response_model=SignupResponse)
+
+@auth_router.post("/send_verification_email")
+async def Send_verification_email(emails:EmailModel):
+    email = emails.Addresses
+    html = "<p>Please click the link below to verify your email address:</p>"
+    message = CreateMail(recipients=email, subject="Email Verification", body=html)
+    await mail.send_message(message)
+    return JSONResponse(content={"message": "Verification email sent"})
+
+
+@auth_router.get("/verify_email/{token}")
+async def Verify_email(token:str,session:AsyncSession=Depends(get_session)):
+    data = verify_email_verification_token(token)
+    if not data:
+        raise HTTPException(status_code=400,detail="Invalid or expired token")
+    email = data.get("email")
+    if not email:
+        raise HTTPException(status_code=400,detail="Invalid token data")
+    user = await auth_service.get_user_by_email(email,session)
+    if not user:
+        raise HTTPException(status_code=404,detail="User not found")
+    await auth_service.update_user(user,{"is_verified":True},session)
+    return JSONResponse(content={"message": "Email verified successfully"})
+    
+
+
+@auth_router.post("/signup")
 async def Signup(user_data:SignupModel,session:AsyncSession=Depends(get_session)):
       user =  await auth_service.check_user_exists(user_data.email,session)
       if user is not None:
            raise HTTPException(status_code=403,detail="User email already exists")
       new_user = await auth_service.create_user(user_data,session)
-      return new_user
+
+      token = generate_email_verification_token({"email": new_user.email})
+      link = f"http://{Config.DOMAIN}/api/v1/auth/verify_email{token}"
+      html = f"<h1>Welcome {new_user.first_name},</h1><p>Thank you for signing up. Please verify your email address to activate your account here <a href='{link}'>this link</a>.</p>"
+      message = CreateMail(recipients=[new_user.email], subject="Welcome to Our Service - Verify Your Email", body=html)
+      await mail.send_message(message)
+      return {"message": "User created successfully. Please check your email to verify your account.","user":new_user}
+
 
 @auth_router.post("/login")
 async def Login(user_data:LoginModel,session:AsyncSession=Depends(get_session)):
@@ -35,6 +70,7 @@ async def Login(user_data:LoginModel,session:AsyncSession=Depends(get_session)):
              "refresh_token":refresh_token
       }) 
 
+
 @auth_router.get("/refresh_token")
 async def Get_refesh_token(Token_details:dict =Depends(RefreshTokenBearer())):
      exp = Token_details.get("exp")
@@ -46,6 +82,7 @@ async def Get_refesh_token(Token_details:dict =Depends(RefreshTokenBearer())):
            "access_token": access_token
       })
 
+
 @auth_router.get("/logout")
 async def Logout(Token_details:dict =Depends(AccessTokenBearer())):
      JTI = Token_details.get("jti")
@@ -53,6 +90,7 @@ async def Logout(Token_details:dict =Depends(AccessTokenBearer())):
           raise HTTPException(status_code=401,detail="Invalid token")
      await add_token_to_blocklist(JTI)
      return JSONResponse(content={"message": "Successfully logged out"})
+
 
 @auth_router.get("/me",response_model=UserRead)
 async def Me(current_user: dict = Depends(get_current_user),_:bool=Depends(Rolechecker(workers_role))):

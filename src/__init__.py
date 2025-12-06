@@ -5,6 +5,8 @@ from src.Reviews.routes import reviews_router
 from src.db.models import User,Orders,Reviews
 from src.db.main import init_db
 from contextlib import asynccontextmanager
+from src.middleware import register_middleware
+
 @asynccontextmanager
 async def life_span(app:FastAPI):
     print(">>>>starting..........")
@@ -12,7 +14,8 @@ async def life_span(app:FastAPI):
     yield
     print(".........stoping")
 version = "v2"
-app = FastAPI(title="PIZZA_MANAGEMENT_API",version=version, lifespan=life_span)
+app = FastAPI(title="PIZZA_MANAGEMENT_API",version=version) #lifespan=life_span)
+register_middleware(app)
 app.include_router(auth_router,prefix=f"/api/{version}/auth",tags=["auth"])
 app.include_router(Orders_router,prefix=f"/api/{version}/orders",tags=["orders"])
 app.include_router(reviews_router,prefix=f"/api/{version}/review",tags=["reviews"])

@@ -93,3 +93,14 @@ class UserRead(SignupResponse):
                 }
             }
         }
+class EmailModel(BaseModel):
+    Addresses: List[EmailStr]
+
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
+            "example": {
+                "Addresses": ["user@example.com"]
+            }
+        }
+    }

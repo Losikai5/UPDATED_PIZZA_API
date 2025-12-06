@@ -1,1 +1,32 @@
-from fastapi import FastapiEmailSender, EmailMessage
+from fastapi_mail import FastMail, ConnectionConfig, MessageSchema, MessageType
+from src.config import Config
+from pathlib import Path
+from typing import List
+
+BASE_DIR = Path(__file__).resolve().parent
+
+TEMPLATE_DIR = BASE_DIR / "templates"
+
+mail_config = ConnectionConfig(
+    MAIL_USERNAME=Config.MAIL_USERNAME,
+    MAIL_PASSWORD=Config.MAIL_PASSWORD,
+    MAIL_FROM=Config.MAIL_FROM,
+    MAIL_PORT=587,
+    MAIL_SERVER=Config.MAIL_SERVER,
+    MAIL_FROM_NAME=Config.MAIL_FROM_NAME,
+    MAIL_STARTTLS=True,
+    MAIL_SSL_TLS=False,
+    USE_CREDENTIALS=True,
+    VALIDATE_CERTS=True,
+    TEMPLATE_FOLDER=TEMPLATE_DIR
+)
+mail = FastMail(mail_config)
+
+def CreateMail(recipients: List[str], subject: str, body: str) -> MessageSchema:
+    message = MessageSchema(
+        subject=subject,
+        recipients=recipients, 
+        body=body,
+        subtype=MessageType.html
+    )
+    return message
