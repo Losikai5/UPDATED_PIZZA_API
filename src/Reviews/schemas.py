@@ -1,9 +1,10 @@
 from pydantic import BaseModel,Field
 import uuid
 from datetime import datetime
+from typing import Optional
 class ReviewCreate(BaseModel):
       Comment: str
-      Rating: int = Field(lt=5)
+      Rating: int = Field(ge=1, le=5)
       class Config:
           from_attributes = True
           json_schema_extra = {
@@ -17,6 +18,6 @@ class ReviewCreate(BaseModel):
 class ReviewRead(BaseModel):
       uid: uuid.UUID
       Comment: str
-      Rating: int = Field(lt=5)
+      Rating: Optional[int] = Field(default=None, lt=5)
       Created_at: datetime
           

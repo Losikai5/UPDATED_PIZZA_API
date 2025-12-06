@@ -4,7 +4,7 @@ from src.db.main import get_session
 from src.Reviews.service import ReviewsService
 from .schemas import ReviewCreate, ReviewRead
 from typing import List
-from src.auth.dependecies import Rolechecker
+from src.auth.dependecies import Rolechecker, get_current_user
 
 
 user_role_checker = Depends(Rolechecker(["user","admin","staff"]))
@@ -28,10 +28,10 @@ async def read_review(review_uid: str, session: AsyncSession = Depends(get_sessi
     return review
 
 @reviews_router.post("/order/{order_uid}", response_model=ReviewRead, dependencies=[user_role_checker])
-async def add_review_to_order(review: ReviewCreate, order_uid: str, user_email: str, session: AsyncSession = Depends(get_session)):
-    return await reviews_service.add_review_to_order(review, order_uid, user_email, session)
+async def add_review_to_order(review: ReviewCreate, order_uid: str, current_user = Depends(get_current_user), session: AsyncSession = Depends(get_session)):
+    return await reviews_service.add_review_to_order(review, order_uid, current_user.email, session)
 
 @reviews_router.delete("/{review_uid}", dependencies=[user_role_checker])
-async def delete_review(review_uid: str, user_email: str, session: AsyncSession = Depends(get_session)):
-    await reviews_service.delete_review_to_from_book(review_uid, user_email, session)
+async def delete_review(review_uid: str, current_user = Depends(get_current_user), session: AsyncSession = Depends(get_session)):
+    await reviews_service.delete_review_to_from_order(review_uid, current_user.email, session)
     return {"detail": "Review deleted successfully"}

@@ -26,11 +26,11 @@ class ReviewsService:
              await session.commit()
              await session.refresh(review)
              return review
-    async def add_review_to_order(self, review_uid:ReviewCreate, order_uid: str, user_email: str, session: AsyncSession):
+    async def add_review_to_order(self, review_data:ReviewCreate, order_uid: str, user_email: str, session: AsyncSession):
               try:
                   order = await orders_service.Get_order_by_id(order_uid, session)
                   user  = await auth_service.get_user_by_email(user_email, session)
-                  reviews = Reviews(**review_uid.model_dump())
+                  reviews = Reviews(**review_data.model_dump())
                   if not order:
                     raise HTTPException(status_code=404, detail="Order not found")
                   if not user:
@@ -42,16 +42,18 @@ class ReviewsService:
                   await session.commit()
                   await session.refresh(reviews)
                   return reviews
+                  return reviews
               except Exception as e:
                     raise HTTPException(status_code=500, detail=str(e))
               
-async def delete_review_to_from_book(self, review_uid: str, user_email: str, session: AsyncSession):
+    async def delete_review_to_from_order(self, review_uid: str, user_email: str, session: AsyncSession):
        
         user = await auth_service.get_user_by_email(user_email, session)
         review = await self.Get_review_by_id(review_uid, session)
 
         if not review or (review.user is not user):
             raise HTTPException(detail="Cannot delete this review",status_code=403)
-        session.add(review)
-        await session.commit()              
+        session.delete(review)
+        await session.commit()   
+        return {"detail":"Review deleted successfully"}           
               
