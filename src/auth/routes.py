@@ -3,11 +3,11 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 from src.config import Config
 from .service import Auth_service
 from src.db.main import get_session
-from .schemas import SignupModel,SignupResponse,LoginModel,UserRead,EmailModel
+from .schemas import SignupModel,LoginModel,UserRead,EmailModel
 from .utils import Verify_hash,create_access_token,create_refresh_access_token,generate_email_verification_token,verify_email_verification_token
 from fastapi.responses import JSONResponse
 from .dependecies import RefreshTokenBearer,AccessTokenBearer, get_current_user, Rolechecker
-from datetime import datetime,timedelta, timezone
+from datetime import datetime, timezone
 from src.db.redis import add_token_to_blocklist
 from src.mail import mail,CreateMail
 
