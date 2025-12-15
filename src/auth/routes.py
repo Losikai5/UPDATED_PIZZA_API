@@ -6,7 +6,7 @@ from src.db.main import get_session
 from .schemas import SignupModel,LoginModel,UserRead,EmailModel
 from .utils import Verify_hash,create_access_token,create_refresh_access_token,generate_email_verification_token,verify_email_verification_token
 from fastapi.responses import JSONResponse
-from .dependecies import RefreshTokenBearer,AccessTokenBearer, get_current_user, Rolechecker
+from .dependencies import RefreshTokenBearer,AccessTokenBearer, get_current_user, Rolechecker
 from datetime import datetime, timezone
 from src.db.redis import add_token_to_blocklist
 from src.mail import mail,CreateMail
@@ -51,7 +51,7 @@ async def Signup(user_data:SignupModel,session:AsyncSession=Depends(get_session)
       new_user = await auth_service.create_user(user_data,session)
 
       token = generate_email_verification_token({"email": new_user.email})
-      link = f"http://{Config.DOMAIN}/api/v1/auth/verify_email{token}"
+      link = f"http://{Config.DOMAIN}/api/v1/auth/verify_email/{token}"
       html = f"<h1>Welcome {new_user.first_name},</h1><p>Thank you for signing up. Please verify your email address to activate your account here <a href='{link}'>this link</a>.</p>"
       message = CreateMail(recipients=[new_user.email], subject="Welcome to Our Service - Verify Your Email", body=html)
       await mail.send_message(message)

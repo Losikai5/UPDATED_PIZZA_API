@@ -3,7 +3,7 @@ from .service import OrdersService
 from .schemas import OrderCreate, OrderUpdate, OrderRead
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from src.db.main import get_session
-from src.auth.dependecies import AccessTokenBearer,Rolechecker
+from src.auth.dependencies import AccessTokenBearer,Rolechecker
 from typing import List
 from src.Orders.schemas import OrderRead 
 

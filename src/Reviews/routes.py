@@ -4,7 +4,7 @@ from src.db.main import get_session
 from src.Reviews.service import ReviewsService
 from .schemas import ReviewCreate, ReviewRead
 from typing import List
-from src.auth.dependecies import Rolechecker, get_current_user
+from src.auth.dependencies import Rolechecker, get_current_user
 
 
 user_role_checker = Depends(Rolechecker(["user","admin","staff"]))
