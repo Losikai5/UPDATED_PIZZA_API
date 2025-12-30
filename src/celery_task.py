@@ -1,6 +1,6 @@
 from celery import Celery
 from src.config import Config
-from src.mail import mail, CreateMail
+from src.mail import mail, create_mail
 from typing import List
 from asgiref.sync import async_to_sync
 import logging
@@ -59,7 +59,7 @@ def send_email_task(self, recipients: List[str], subject: str, body: str):
         logger.info(f"Sending email to {recipients} with subject: {subject}")
         
         # Create email message
-        message = CreateMail(recipients=recipients, subject=subject, body=body)
+        message = create_mail(recipients=recipients, subject=subject, body=body)
         
         # Send email asynchronously (convert async to sync for Celery)
         async_to_sync(mail.send_message)(message)

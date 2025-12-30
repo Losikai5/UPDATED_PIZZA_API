@@ -22,7 +22,7 @@ mail_config = ConnectionConfig(
 )
 mail = FastMail(mail_config)
 
-def CreateMail(recipients: List[str], subject: str, body: str) -> MessageSchema:
+def create_mail(recipients: List[str], subject: str, body: str) -> MessageSchema:
     message = MessageSchema(
         subject=subject,
         recipients=recipients, 

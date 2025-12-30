@@ -9,10 +9,11 @@ from itsdangerous import URLSafeTimedSerializer
 pwd_hash = CryptContext(schemes=["bcrypt"],deprecated = "auto")
 ACCESS_TIME_MINUTES = 60
 
-def Create_hash(password:str):
+def create_hash(password: str):
     return pwd_hash.hash(password)
-def Verify_hash(password:str,Create_hash:str):
-     return pwd_hash.verify(password,Create_hash)
+
+def verify_hash(password: str, hashed_password: str):
+    return pwd_hash.verify(password, hashed_password)
 
 def create_access_token(user:dict,expiry:timedelta = None,refresh:bool=False):
      payload = {

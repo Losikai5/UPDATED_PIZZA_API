@@ -5,21 +5,22 @@ from .schemas import OrderCreate, OrderUpdate
 from sqlmodel import select, desc
 
 class OrdersService:
-    async def Get_orders(self, session: AsyncSession):
+    async def get_orders(self, session: AsyncSession):
         statement = select(Orders).order_by(desc(Orders.placed_at))
         result = await session.exec(statement)
         return result.all()
     
-    async def Get_order_by_id(self, uid: str, session: AsyncSession):
+    async def get_order_by_id(self, uid: str, session: AsyncSession):
         statement = select(Orders).where(Orders.uid == uid)
         result = await session.exec(statement)
         return result.first()
     
-    async def Get_order_by_user(self, user_id: str, session: AsyncSession):
+    async def get_order_by_user(self, user_id: str, session: AsyncSession):
         statement = select(Orders).where(Orders.user_id == user_id).order_by(desc(Orders.placed_at))
         result = await session.exec(statement)
         return result.first()
-    async def create_order(self, order_data: OrderCreate,user_id: str ,session: AsyncSession):
+    
+    async def create_order(self, order_data: OrderCreate, user_id: str, session: AsyncSession):
         new_order = order_data.model_dump()
         order = Orders(**new_order, user_id=user_id)
         session.add(order)
@@ -28,7 +29,7 @@ class OrdersService:
         return order
     
     async def update_order(self, uid: str, order_data: OrderUpdate, session: AsyncSession):
-        order_update = await self.Get_order_by_id(uid, session)
+        order_update = await self.get_order_by_id(uid, session)
         if order_update is None:
             raise HTTPException(status_code=404, detail="Order is not available, please create an order")
         
@@ -44,7 +45,7 @@ class OrdersService:
         return order_update
 
     async def delete_order(self, uid: str, session: AsyncSession):
-        remove_order = await self.Get_order_by_id(uid, session)
+        remove_order = await self.get_order_by_id(uid, session)
         if remove_order is not None:
             await session.delete(remove_order)
             await session.commit()

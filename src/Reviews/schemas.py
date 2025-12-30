@@ -1,23 +1,25 @@
-from pydantic import BaseModel,Field
+from pydantic import BaseModel, Field
 import uuid
 from datetime import datetime
 from typing import Optional
+
 class ReviewCreate(BaseModel):
-      Comment: str
-      Rating: int = Field(ge=1, le=5)
-      class Config:
-          from_attributes = True
-          json_schema_extra = {
-              "example":{
-                    
-                    "Comment":"Great pizza, loved the crust!",
-                    "Rating":4
-                    
-                }   
-            }  
+    comment: str
+    rating: int = Field(ge=1, le=5)
+    
+    class Config:
+        from_attributes = True
+        json_schema_extra = {
+            "example": {
+                "comment": "Great pizza, loved the crust!",
+                "rating": 4
+            }   
+        }  
+
 class ReviewRead(BaseModel):
-      uid: uuid.UUID
-      Comment: str
-      Rating: int = Field(ge=1, le=5)
-      Created_at: datetime
+    uid: uuid.UUID
+    comment: str
+    rating: int = Field(ge=1, le=5)
+    created_at: datetime
+
           

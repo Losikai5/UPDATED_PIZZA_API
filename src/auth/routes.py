@@ -4,12 +4,12 @@ from src.config import Config
 from .service import Auth_service
 from src.db.main import get_session
 from .schemas import SignupModel,LoginModel,UserRead,EmailModel,PasswordResetModel,PasswordResetConfirmModel
-from .utils import Verify_hash,create_access_token,create_refresh_access_token,generate_email_verification_token,verify_email_verification_token,Create_hash
+from .utils import verify_hash, create_access_token, create_refresh_access_token, generate_email_verification_token, verify_email_verification_token, create_hash
 from fastapi.responses import JSONResponse
 from .dependencies import RefreshTokenBearer,AccessTokenBearer, get_current_user, Rolechecker
 from datetime import datetime, timezone
 from src.db.redis import add_token_to_blocklist
-from src.mail import CreateMail
+from src.mail import create_mail
 from src.celery_task import send_email_task
 
 auth_router = APIRouter()
@@ -19,8 +19,8 @@ workers_role = Depends(Rolechecker(["admin","staff"]))
 
 
 @auth_router.post("/send_verification_email")
-async def Send_verification_email(emails:EmailModel):
-    email = emails.Addresses
+async def send_verification_email(emails:EmailModel):
+    email = emails.addresses
     html = "<p>Please click the link below to verify your email address:</p>"
     # Send email asynchronously using Celery
     send_email_task.delay(recipients=email, subject="Email Verification", body=html)
@@ -28,7 +28,7 @@ async def Send_verification_email(emails:EmailModel):
 
 
 @auth_router.get("/verify_email/{token}")
-async def Verify_email(token:str,session:AsyncSession=Depends(get_session)):
+async def verify_email(token:str,session:AsyncSession=Depends(get_session)):
     data = verify_email_verification_token(token)
     if not data:
         raise HTTPException(status_code=400,detail="Invalid or expired token")
@@ -45,7 +45,7 @@ async def Verify_email(token:str,session:AsyncSession=Depends(get_session)):
 
 
 @auth_router.post("/signup")
-async def Signup(user_data:SignupModel,session:AsyncSession=Depends(get_session)):
+async def signup(user_data:SignupModel,session:AsyncSession=Depends(get_session)):
       user =  await auth_service.check_user_exists(user_data.email,session)
       if user is not None:
            raise HTTPException(status_code=403,detail="User email already exists")
@@ -60,9 +60,9 @@ async def Signup(user_data:SignupModel,session:AsyncSession=Depends(get_session)
 
 
 @auth_router.post("/login")
-async def Login(user_data:LoginModel,session:AsyncSession=Depends(get_session)):
+async def login(user_data:LoginModel,session:AsyncSession=Depends(get_session)):
      user = await auth_service.get_user_by_email(user_data.email,session)
-     if user is  None or not Verify_hash(user_data.password,user.password_hash):
+     if user is  None or not verify_hash(user_data.password,user.password_hash):
           raise HTTPException(status_code=401,detail="wrong credentials")
      
      access_token = create_access_token({"uid": str(user.uid), "email": user.email, "role": user.role})
@@ -74,7 +74,7 @@ async def Login(user_data:LoginModel,session:AsyncSession=Depends(get_session)):
 
 
 @auth_router.get("/refresh_token")
-async def Get_refesh_token(Token_details:dict =Depends(RefreshTokenBearer())):
+async def get_refresh_token(Token_details:dict =Depends(RefreshTokenBearer())):
      exp = Token_details.get("exp")
      now = datetime.now(tz=timezone.utc)
      if exp is None or now >= datetime.fromtimestamp(exp,tz=timezone.utc):
@@ -86,7 +86,7 @@ async def Get_refesh_token(Token_details:dict =Depends(RefreshTokenBearer())):
 
 
 @auth_router.get("/logout")
-async def Logout(Token_details:dict =Depends(AccessTokenBearer())):
+async def logout(Token_details:dict =Depends(AccessTokenBearer())):
      JTI = Token_details.get("jti")
      if JTI is None:
           raise HTTPException(status_code=401,detail="Invalid token")
@@ -95,12 +95,12 @@ async def Logout(Token_details:dict =Depends(AccessTokenBearer())):
 
 
 @auth_router.get("/me",response_model=UserRead)
-async def Me(current_user: dict = Depends(get_current_user),_:bool=Depends(Rolechecker(workers_role))):
+async def me(current_user: dict = Depends(get_current_user),_:bool=Depends(Rolechecker(workers_role))):
     return current_user
 
 
 @auth_router.post("/password-reset-request")
-async def Password_reset(email:PasswordResetModel,session:AsyncSession=Depends(get_session)):
+async def password_reset(email:PasswordResetModel,session:AsyncSession=Depends(get_session)):
     user = await auth_service.get_user_by_email(email.email,session)
     if not user:
         raise HTTPException(status_code=404,detail="User not found")
@@ -113,7 +113,7 @@ async def Password_reset(email:PasswordResetModel,session:AsyncSession=Depends(g
 
 
 @auth_router.post("/password-reset-confirm/{token}")
-async def Password_reset_confirm(token:str,new_password:PasswordResetConfirmModel,session:AsyncSession=Depends(get_session)):
+async def password_reset_confirm(token:str,new_password:PasswordResetConfirmModel,session:AsyncSession=Depends(get_session)):
     if new_password.new_password != new_password.confirm_password:
         raise HTTPException(status_code=400,detail="Passwords do not match")
     
@@ -126,6 +126,6 @@ async def Password_reset_confirm(token:str,new_password:PasswordResetConfirmMode
     user = await auth_service.get_user_by_email(email,session)
     if not user:
         raise HTTPException(status_code=404,detail="User not found")
-    hashed_password = Create_hash(new_password.new_password)
+    hashed_password = create_hash(new_password.new_password)
     await auth_service.update_user(user,{"password_hash":hashed_password},session)
     return JSONResponse(content={"message": "Password has been reset successfully"},status_code=200)

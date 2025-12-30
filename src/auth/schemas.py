@@ -94,13 +94,13 @@ class UserRead(SignupResponse):
             }
         }
 class EmailModel(BaseModel):
-    Addresses: List[EmailStr]
+    addresses: List[EmailStr]
 
     model_config = {
         "from_attributes": True,
         "json_schema_extra": {
             "example": {
-                "Addresses": ["user@example.com"]
+                "addresses": ["user@example.com"]
             }
         }
     }
