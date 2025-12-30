@@ -50,7 +50,7 @@ class ReviewsService:
         user = await auth_service.get_user_by_email(user_email, session)
         review = await self.Get_review_by_id(review_uid, session)
 
-        if not review or (review.user is not user):
+        if not review or (review.user != user):
             raise HTTPException(detail="Cannot delete this review",status_code=403)
         session.delete(review)
         await session.commit()   

@@ -18,6 +18,6 @@ class ReviewCreate(BaseModel):
 class ReviewRead(BaseModel):
       uid: uuid.UUID
       Comment: str
-      Rating: Optional[int] = Field(default=None, lt=5)
+      Rating: int = Field(ge=1, le=5)
       Created_at: datetime
           

@@ -59,6 +59,8 @@ class Rolechecker:
 
     async def __call__(self, user = Depends(get_current_user)):
         user_role = user.role
+        if not user.is_verified:
+            raise HTTPException(status_code=403, detail="User is not verified")
         if user_role not in self.allowed_roles:
             raise HTTPException(status_code=403, detail="Insufficient permissions")  
         return True      

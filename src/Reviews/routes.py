@@ -20,7 +20,7 @@ async def read_reviews(session: AsyncSession = Depends(get_session)):
 async def create_review(review: ReviewCreate, session: AsyncSession = Depends(get_session)):
     return await reviews_service.Create_review(review, session)
 
-@reviews_router.get("/{review_uid}", dependencies=[user_role_checker])
+@reviews_router.get("/{review_uid}", response_model=ReviewRead, dependencies=[user_role_checker])
 async def read_review(review_uid: str, session: AsyncSession = Depends(get_session)):
     review = await reviews_service.Get_review_by_id(review_uid, session)
     if not review:

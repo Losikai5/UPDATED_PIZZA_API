@@ -14,7 +14,7 @@ async def life_span(app:FastAPI):
     yield
     print(".........stoping")
 version = "v2"
-app = FastAPI(title="PIZZA_MANAGEMENT_API",version=version) #lifespan=life_span)
+app = FastAPI(title="PIZZA_MANAGEMENT_API",version=version, contact={"name": "Losika","email": "losikanicholasi5@gmail.com",})
 register_middleware(app)
 app.include_router(auth_router,prefix=f"/api/{version}/auth",tags=["auth"])
 app.include_router(Orders_router,prefix=f"/api/{version}/orders",tags=["orders"])

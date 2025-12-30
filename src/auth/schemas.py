@@ -104,3 +104,27 @@ class EmailModel(BaseModel):
             }
         }
     }
+class PasswordResetModel(BaseModel):
+    email: EmailStr
+
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
+            "example": {
+                "email": "user@example.com"
+            }
+        }
+    }  
+class PasswordResetConfirmModel(BaseModel):
+    new_password: str
+    confirm_password: str
+
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
+            "example": {
+                "new_password": "newstrongpassword123",
+                "confirm_password": "newstrongpassword123"
+            }
+        }
+    }      

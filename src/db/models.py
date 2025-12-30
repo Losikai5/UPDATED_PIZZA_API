@@ -32,6 +32,7 @@ class Orders(SQLModel,table=True):
     flavour:str
     user_id:Optional[uuid.UUID]=Field(foreign_key="users.uid",default=None)
     user:Optional["User"] = Relationship(back_populates="Order")
+    reviews: List["Reviews"] = Relationship(back_populates="order")
     placed_at:datetime = Field(sa_column=Column(pg.TIMESTAMP,server_default=func.now()))
     def __repr__(self):
         return f"The pizza is {self.Order_status} and the size is {self.pizza_size} "
@@ -48,6 +49,7 @@ class Reviews(SQLModel,table=True):
     user_id:Optional[uuid.UUID]=Field(foreign_key="users.uid",default=None)
     Orders_review:Optional[uuid.UUID]=Field(foreign_key="orders.uid",default=None)
     user:Optional["User"]= Relationship(back_populates="Review")
+    order:Optional["Orders"]= Relationship(back_populates="reviews")
     Created_at:datetime = Field(sa_column=Column(pg.TIMESTAMP,server_default=func.now()))
     def __repr__(self):
         return f"The comment is {self.Comment} and it was created at {self.Created_at} "
