@@ -1,0 +1,46 @@
+services:
+  # Web Service (FastAPI)
+  - type: web
+    name: pizza-api
+    runtime: python
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: pip install -r requirements.txt && alembic upgrade head
+    startCommand: uvicorn src:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: pizza-db
+          property: connectionString
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: pizza-redis
+          property: connectionString
+      - key: DOMAIN
+        value: pizza-api.onrender.com
+      # Add these manually in Render Dashboard:
+      # MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM, MAIL_SERVER, MAIL_FROM_NAME
+
+  # Redis Service (for Celery)
+  - type: redis
+    name: pizza-redis
+    region: oregon
+    plan: free
+    maxmemoryPolicy: noeviction
+    ipAllowList: []
+
+# Database
+databases:
+  - name: pizza-db
+    region: oregon
+    plan: free
+    databaseName: pizza_db
+    user: pizza_user

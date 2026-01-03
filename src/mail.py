@@ -6,6 +6,7 @@ from typing import List
 BASE_DIR = Path(__file__).resolve().parent
 
 TEMPLATE_DIR = BASE_DIR / "templates"
+TEMPLATE_DIR.mkdir(parents=True, exist_ok=True)
 
 mail_config = ConnectionConfig(
     MAIL_USERNAME=Config.MAIL_USERNAME,

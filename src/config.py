@@ -1,8 +1,10 @@
-from pydantic_settings import BaseSettings,SettingsConfigDict
+from pydantic_settings import BaseSettings, SettingsConfigDict
+import os
+
 class Settings(BaseSettings):
-    DATABASE_URL:str
-    JWT_SECRET:str
-    JWT_ALGORITHM:str
+    DATABASE_URL: str
+    JWT_SECRET: str
+    JWT_ALGORITHM: str
     REDIS_URL: str = "redis://localhost:6379/0"
     MAIL_USERNAME: str
     MAIL_PASSWORD: str
@@ -14,8 +16,12 @@ class Settings(BaseSettings):
     MAIL_SSL_TLS: bool = False
     USE_CREDENTIALS: bool = True
     VALIDATE_CERTS: bool = True
-    DOMAIN:str
-    model_config = SettingsConfigDict(env_file=".env",extra="ignore")
+    DOMAIN: str
+    
+    model_config = SettingsConfigDict(
+        env_file=".env" ,
+        extra="ignore",
+    )
 
 Config = Settings()
 
