@@ -1,13 +1,8 @@
 from sqlalchemy.ext.asyncio.session import AsyncSession
-from fastapi import Depends, HTTPException
+from fastapi import HTTPException
 from src.db.models import Reviews
 from .schemas import ReviewCreate
 from sqlmodel import select, desc
-from src.auth.service import Auth_service
-from src.Orders.service import OrdersService
-
-auth_service = Auth_service()
-orders_service = OrdersService()
 
 class ReviewsService:
     async def get_reviews(self, session: AsyncSession):
@@ -27,34 +22,13 @@ class ReviewsService:
         await session.commit()
         await session.refresh(review)
         return review
-    
-    async def add_review_to_order(self, review_data: ReviewCreate, order_uid: str, user_email: str, session: AsyncSession):
-        try:
-            order = await orders_service.get_order_by_id(order_uid, session)
-            user = await auth_service.get_user_by_email(user_email, session)
-            reviews = Reviews(**review_data.model_dump())
-            if not order:
-                raise HTTPException(status_code=404, detail="Order not found")
-            if not user:
-                raise HTTPException(status_code=404, detail="User not found")
-        
-            reviews.user = user
-            reviews.order = order
-            session.add(reviews)
-            await session.commit()
-            await session.refresh(reviews)
-            return reviews
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
-          
-    async def delete_review_from_order(self, review_uid: str, user_email: str, session: AsyncSession):
-        user = await auth_service.get_user_by_email(user_email, session)
+
+    async def delete_review(self, review_uid: str, session: AsyncSession):
         review = await self.get_review_by_id(review_uid, session)
 
-        if not review or (review.user != user):
-            raise HTTPException(detail="Cannot delete this review", status_code=403)
-        session.delete(review)
-        await session.commit()   
-        return {"detail": "Review deleted successfully"}           
-          
+        if not review:
+            raise HTTPException(detail="Review not found", status_code=404)
+        await session.delete(review)
+        await session.commit()
+        return {"detail": "Review deleted successfully"}
 

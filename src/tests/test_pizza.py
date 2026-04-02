@@ -133,42 +133,6 @@ class TestOrders:
             assert "not found" in response.json()["detail"].lower()
 
     @pytest.mark.asyncio
-    async def test_get_order_by_user_success(self, client, db_session):
-        """Test getting order by user"""
-        order_id = str(uuid.uuid4())
-
-        with patch('src.Orders.routes.order_service.Get_order_by_user', new_callable=AsyncMock) as mock_get_order:
-            # Mock order
-            mock_order = Mock()
-            mock_order.uid = order_id
-            mock_order.Quantity = 3
-            mock_order.Order_status = "completed"
-            mock_order.pizza_size = "large"
-            mock_order.flavour = "hawaiian"
-            mock_order.placed_at = datetime.now()
-            mock_get_order.return_value = mock_order
-
-            response = client.get(f"{orders_prefix}/user/{order_id}")
-
-            assert response.status_code == 200
-            result = response.json()
-            assert result["Quantity"] == 3
-            assert result["Order_status"] == "completed"
-
-    @pytest.mark.asyncio
-    async def test_get_order_by_user_not_found(self, client, db_session):
-        """Test getting non-existent order by user"""
-        order_id = str(uuid.uuid4())
-
-        with patch('src.Orders.routes.order_service.Get_order_by_user', new_callable=AsyncMock) as mock_get_order:
-            mock_get_order.return_value = None
-
-            response = client.get(f"{orders_prefix}/user/{order_id}")
-
-            assert response.status_code == 404
-            assert "not found" in response.json()["detail"].lower()
-
-    @pytest.mark.asyncio
     async def test_update_order_success(self, client, db_session):
         """Test successful order update"""
         order_id = str(uuid.uuid4())

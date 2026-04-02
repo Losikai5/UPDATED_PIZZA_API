@@ -1,5 +1,5 @@
 from src.db.main import get_session
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import Mock, AsyncMock
 from fastapi.testclient import TestClient
 from src.auth.dependencies import Rolechecker, AccessTokenBearer, RefreshTokenBearer, get_current_user
 from src import app
@@ -59,12 +59,3 @@ def db_session():
 def client():
     """Fixture to provide test client"""
     return TestClient(app)
-
-@pytest.fixture(autouse=True)
-def mock_celery_tasks():
-    """Mock Celery tasks to prevent actual task execution during tests"""
-    with patch('src.celery_task.send_email_task.delay') as mock_task:
-        mock_task.return_value = Mock(id='test-task-id')
-        yield mock_task
-        
-        

@@ -1,5 +1,4 @@
-from sqlmodel import SQLModel, Field, Column, func, Relationship
-from typing import Optional, List
+from sqlmodel import SQLModel, Field, Column, func
 import uuid
 from datetime import datetime 
 import sqlalchemy.dialects.postgresql as pg
@@ -13,8 +12,6 @@ class User(SQLModel, table=True):
     last_name: str
     email: str
     role: str = Field(sa_column=Column(pg.VARCHAR, nullable=False, server_default="user"))
-    orders: List["Orders"] = Relationship(back_populates="user")
-    reviews: List["Reviews"] = Relationship(back_populates="user")
     is_verified: bool = Field(default=False)
     password_hash: str
     created_at: datetime = Field(sa_column=Column(pg.TIMESTAMP, server_default=func.now()))
@@ -31,9 +28,6 @@ class Orders(SQLModel, table=True):
     order_status: str
     pizza_size: str
     flavour: str
-    user_id: Optional[uuid.UUID] = Field(foreign_key="users.uid", default=None)
-    user: Optional["User"] = Relationship(back_populates="orders")
-    reviews: List["Reviews"] = Relationship(back_populates="order")
     placed_at: datetime = Field(sa_column=Column(pg.TIMESTAMP, server_default=func.now()))
     
     def __repr__(self):
@@ -47,10 +41,6 @@ class Reviews(SQLModel, table=True):
     uid: uuid.UUID = Field(sa_column=Column(pg.UUID, primary_key=True, default=uuid.uuid4, nullable=False))
     comment: str
     rating: int = Field(sa_column=Column(pg.INTEGER, nullable=False))  
-    user_id: Optional[uuid.UUID] = Field(foreign_key="users.uid", default=None)
-    order_id: Optional[uuid.UUID] = Field(foreign_key="orders.uid", default=None)
-    user: Optional["User"] = Relationship(back_populates="reviews")
-    order: Optional["Orders"] = Relationship(back_populates="reviews")
     created_at: datetime = Field(sa_column=Column(pg.TIMESTAMP, server_default=func.now()))
     
     def __repr__(self):

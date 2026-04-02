@@ -144,54 +144,11 @@ class TestReviews:
             assert "not found" in response.json()["detail"].lower()
 
     @pytest.mark.asyncio
-    async def test_add_review_to_order_success(self, client, db_session):
-        """Test adding review to an order"""
-        order_uid = str(uuid.uuid4())
-        review_data = {
-            "Comment": "Great pizza and fast delivery!",
-            "Rating": 4
-        }
-
-        with patch('src.Reviews.routes.reviews_service.add_review_to_order', new_callable=AsyncMock) as mock_add_review:
-            # Mock created review
-            mock_review = Mock()
-            mock_review.uid = uuid.uuid4()
-            mock_review.Comment = review_data["Comment"]
-            mock_review.Rating = review_data["Rating"]
-            mock_review.Created_at = datetime.now()
-            mock_add_review.return_value = mock_review
-
-            response = client.post(f"{reviews_prefix}/order/{order_uid}", json=review_data)
-
-            assert response.status_code == 200
-            result = response.json()
-            assert result["Comment"] == review_data["Comment"]
-            assert result["Rating"] == review_data["Rating"]
-            mock_add_review.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_add_review_to_order_not_found(self, client, db_session):
-        """Test adding review to non-existent order"""
-        order_uid = str(uuid.uuid4())
-        review_data = {
-            "Comment": "Great pizza!",
-            "Rating": 5
-        }
-
-        with patch('src.Reviews.routes.reviews_service.add_review_to_order', new_callable=AsyncMock) as mock_add_review:
-            from fastapi import HTTPException
-            mock_add_review.side_effect = HTTPException(status_code=404, detail="Order not found")
-
-            response = client.post(f"{reviews_prefix}/order/{order_uid}", json=review_data)
-
-            assert response.status_code == 404
-
-    @pytest.mark.asyncio
     async def test_delete_review_success(self, client, db_session):
         """Test successful review deletion"""
         review_uid = str(uuid.uuid4())
 
-        with patch('src.Reviews.routes.reviews_service.delete_review_to_from_order', new_callable=AsyncMock) as mock_delete:
+        with patch('src.Reviews.routes.reviews_service.delete_review', new_callable=AsyncMock) as mock_delete:
             mock_delete.return_value = None
 
             response = client.delete(f"{reviews_prefix}/{review_uid}")
@@ -205,26 +162,13 @@ class TestReviews:
         """Test deleting non-existent review"""
         review_uid = str(uuid.uuid4())
 
-        with patch('src.Reviews.routes.reviews_service.delete_review_to_from_order', new_callable=AsyncMock) as mock_delete:
+        with patch('src.Reviews.routes.reviews_service.delete_review', new_callable=AsyncMock) as mock_delete:
             from fastapi import HTTPException
             mock_delete.side_effect = HTTPException(status_code=404, detail="Review not found")
 
             response = client.delete(f"{reviews_prefix}/{review_uid}")
 
             assert response.status_code == 404
-
-    @pytest.mark.asyncio
-    async def test_delete_review_unauthorized(self, client, db_session):
-        """Test deleting review by unauthorized user"""
-        review_uid = str(uuid.uuid4())
-
-        with patch('src.Reviews.routes.reviews_service.delete_review_to_from_order', new_callable=AsyncMock) as mock_delete:
-            from fastapi import HTTPException
-            mock_delete.side_effect = HTTPException(status_code=403, detail="Not authorized to delete this review")
-
-            response = client.delete(f"{reviews_prefix}/{review_uid}")
-
-            assert response.status_code == 403
 
     @pytest.mark.asyncio
     async def test_review_rating_boundaries(self, client, db_session):
