@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from .service import Auth_service
 from src.db.main import get_session
-from .schemas import SignupModel, LoginModel, UserRead
+from .schemas import SignupModel, LoginModel, UserRead,UserDetailRead
 from .utils import verify_hash, create_access_token, create_refresh_access_token
 from fastapi.responses import JSONResponse
 from .dependencies import RefreshTokenBearer, AccessTokenBearer, get_current_user, Rolechecker
@@ -11,7 +11,7 @@ from src.db.redis import add_token_to_blocklist
 
 auth_router = APIRouter()
 auth_service = Auth_service()
-roles = Rolechecker(["user", "admin", "staff"])
+roles = Rolechecker(["user", "Admin", "Staff"])
 
 @auth_router.post("/signup")
 async def signup(user_data: SignupModel, session: AsyncSession = Depends(get_session)):
@@ -59,6 +59,7 @@ async def logout(Token_details: dict = Depends(AccessTokenBearer())):
     return JSONResponse(content={"message": "Successfully logged out"})
 
 
-@auth_router.get("/me", response_model=UserRead)
+@auth_router.get("/me", response_model=UserDetailRead)
 async def me(current_user: dict = Depends(get_current_user), _: bool = Depends(roles)):
-    return current_user
+   return current_user            
+    

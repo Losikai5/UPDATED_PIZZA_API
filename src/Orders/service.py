@@ -15,8 +15,19 @@ class OrdersService:
         result = await session.exec(statement)
         return result.first()
 
-    async def create_order(self, order_data: OrderCreate, session: AsyncSession):
+    async def create_order(self, order_data: OrderCreate, session: AsyncSession, user_id):
+        existing_order_statement = select(Orders).where(
+            Orders.user_id == user_id,
+            Orders.order_status == "pending",
+        )
+        existing_order_result = await session.exec(existing_order_statement)
+        existing_order = existing_order_result.first()
+        if existing_order is not None:
+            raise HTTPException(status_code=400, detail="You already have a pending order. Complete it before creating a new one.")
+
         new_order = order_data.model_dump()
+        new_order["user_id"] = user_id
+        new_order["order_status"] = "pending"
         order = Orders(**new_order)
         session.add(order)
         await session.commit()
@@ -46,3 +57,7 @@ class OrdersService:
             await session.commit()
             return "Order removed successfully"
         raise HTTPException(status_code=404, detail="Order is not available, please create an order")
+    async def get_orders_by_user_id(self, user_id: str, session: AsyncSession):
+        statement = select(Orders).where(Orders.user_id == user_id).order_by(desc(Orders.placed_at))
+        result = await session.exec(statement)
+        return result.all()

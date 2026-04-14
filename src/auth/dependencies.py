@@ -48,7 +48,7 @@ class RefreshTokenBearer(Bearer_token):
 
 async def get_current_user(token_data:dict = Depends(AccessTokenBearer()),session:AsyncSession = Depends(get_session)):
                user_email = token_data["user"]["email"]
-               current_user = await Service.get_user_by_email(user_email,session)
+               current_user = await Service.get_user_by_email_with_relations(user_email,session)
                if not current_user:
                    raise HTTPException(status_code=404,detail="User not found!!!!!!")
                return current_user      

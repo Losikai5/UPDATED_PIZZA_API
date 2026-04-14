@@ -5,7 +5,7 @@ from typing import Optional
 
 class ReviewCreate(BaseModel):
     comment: str
-    rating: int = Field(ge=1, le=5)
+    rating: int = Field(ge=0, le=5)
     
     class Config:
         from_attributes = True
@@ -19,7 +19,7 @@ class ReviewCreate(BaseModel):
 class ReviewRead(BaseModel):
     uid: uuid.UUID
     comment: str
-    rating: int = Field(ge=1, le=5)
+    rating: int = Field(ge=0, le=5)
     created_at: datetime
 
           

@@ -1,13 +1,13 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from enum import Enum
 import uuid
+from src.Reviews.schemas import ReviewRead
 
 
 class OrderCreate(BaseModel):
     quantity: int
-    order_status: str
     pizza_size: str
     flavour: str
     
@@ -16,7 +16,6 @@ class OrderCreate(BaseModel):
         json_schema_extra = {
             "example": {
                 "quantity": 2,
-                "order_status": "pending",
                 "pizza_size": "medium",
                 "flavour": "pepperoni",
             }
@@ -41,6 +40,7 @@ class OrderUpdate(BaseModel):
 
 class OrderRead(BaseModel):
     uid: uuid.UUID
+    user_id: Optional[uuid.UUID] = None
     quantity: int
     order_status: str
     pizza_size: str
@@ -52,6 +52,7 @@ class OrderRead(BaseModel):
         json_schema_extra = {
             "example": {
                 "uid": "123e4567-e89b-12d3-a456-426614174000",
+                "user_id": "123e4567-e89b-12d3-a456-426614174001",
                 "quantity": 2,
                 "order_status": "pending",
                 "pizza_size": "medium",
@@ -60,3 +61,20 @@ class OrderRead(BaseModel):
             }
         }
 
+class OrderDetailRead(OrderRead):
+    reviews: List[ReviewRead]
+    
+    class Config:
+        from_attributes = True
+        json_schema_extra = {
+            "example": {
+                "uid": "123e4567-e89b-12d3-a456-426614174000",
+                "user_id": "123e4567-e89b-12d3-a456-426614174001",
+                "quantity": 2,
+                "order_status": "pending",
+                "pizza_size": "medium",
+                "flavour": "pepperoni",
+                "placed_at": "2024-06-01T12:00:00",
+                "reviews": []
+            }
+        }
