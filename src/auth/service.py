@@ -1,7 +1,6 @@
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from src.db.models import User
 from sqlmodel import select
-from sqlalchemy.orm import selectinload
 from fastapi import HTTPException
 from .schemas import SignupModel
 from .utils import create_hash
@@ -10,15 +9,6 @@ from .utils import create_hash
 class Auth_service:
     async def get_user_by_email(self, email: str, session: AsyncSession):
         statement = select(User).where(User.email == email)
-        result = await session.exec(statement)
-        return result.first()
-
-    async def get_user_by_email_with_relations(self, email: str, session: AsyncSession):
-        statement = (
-            select(User)
-            .options(selectinload(User.orders), selectinload(User.reviews))
-            .where(User.email == email)
-        )
         result = await session.exec(statement)
         return result.first()
 
