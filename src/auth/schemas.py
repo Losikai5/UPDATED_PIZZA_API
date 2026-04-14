@@ -86,6 +86,73 @@ class UserRead(SignupResponse):
                 }
             }
         }
+
+
+class SignupSuccessResponse(BaseModel):
+    message: str
+    user: UserRead
+
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
+            "example": {
+                "message": "User created successfully please verify your email.",
+                "user": {
+                    "uid": "123e4567-e89b-12d3-a456-426614174000",
+                    "username": "johndoe",
+                    "first_name": "John",
+                    "last_name": "Doe",
+                    "email": "johndoe@example.com",
+                    "is_verified": False,
+                    "role": "user",
+                    "created_at": "2024-06-01T12:00:00"
+                }
+            }
+        }
+    }
+
+
+class TokenPairResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
+            "example": {
+                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            }
+        }
+    }
+
+
+class AccessTokenResponse(BaseModel):
+    access_token: str
+
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
+            "example": {
+                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            }
+        }
+    }
+
+
+class MessageResponse(BaseModel):
+    message: str
+
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
+            "example": {
+                "message": "Operation completed successfully."
+            }
+        }
+    }
+
+
 class UserDetailRead(UserRead):
     orders: List[OrderRead]
     reviews: List[ReviewRead]
@@ -104,6 +171,42 @@ class UserDetailRead(UserRead):
                 "created_at": "2024-06-01T12:00:00",
                 "orders": [],
                 "reviews": []
+            }
+        }
+    }
+
+class EmailModel(BaseModel):
+    addresses : List[str]    
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
+            "example": {
+                "addresses": ["johndoe@example.com"]
+            }
+        }
+    }
+
+class PasswordResetRequestModel(BaseModel):
+    email: str
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
+            "example": {
+                "email": "johndoe@example.com"
+            }
+        }
+    }
+
+
+class PasswordResetConfirmModel(BaseModel):
+    new_password: str
+    confirm_new_password: str    
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
+            "example": {
+                "new_password": "newpassword123",
+                "confirm_new_password": "newpassword123"
             }
         }
     }

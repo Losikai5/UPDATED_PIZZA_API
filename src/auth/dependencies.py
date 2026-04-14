@@ -61,6 +61,8 @@ class Rolechecker:
         user_role = user.role
         if user_role not in self.allowed_roles:
             raise HTTPException(status_code=403, detail="Insufficient permissions")  
+        if not user.is_verified:
+            raise HTTPException(status_code=403, detail="Email not verified")
         return True      
 
 
