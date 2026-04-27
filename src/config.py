@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     MAIL_PORT: int
     MAIL_SERVER: str
     MAIL_FROM_NAME: str
+    PROVIDER_EMAIL: str
     MAIL_PASSWORD: str
     MAIL_USERNAME: str
     MAIL_STARTTLS: bool

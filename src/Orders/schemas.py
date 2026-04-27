@@ -4,6 +4,8 @@ from typing import Optional, List
 from enum import Enum
 import uuid
 from src.Reviews.schemas import ReviewRead
+from src.celery import send_order_accepted_task, send_order_completed_task, send_order_in_transit_task, send_order_in_transit_task,send_order_cancelled_task, send_order_confirmation_task
+from src.db.models import Notification, NotificationType, OrderStatus
 
 
 class OrderCreate(BaseModel):
@@ -45,6 +47,7 @@ class OrderRead(BaseModel):
     order_status: str
     pizza_size: str
     flavour: str
+    total_price: float
     placed_at: datetime
     
     class Config:
@@ -57,6 +60,7 @@ class OrderRead(BaseModel):
                 "order_status": "pending",
                 "pizza_size": "medium",
                 "flavour": "pepperoni",
+                "total_price": 30.0,
                 "placed_at": "2024-06-01T12:00:00"
             }
         }
@@ -74,7 +78,10 @@ class OrderDetailRead(OrderRead):
                 "order_status": "pending",
                 "pizza_size": "medium",
                 "flavour": "pepperoni",
+                "total_price": 30.0,
                 "placed_at": "2024-06-01T12:00:00",
                 "reviews": []
             }
         }
+
+

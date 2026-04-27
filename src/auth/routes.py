@@ -16,12 +16,10 @@ from .schemas import (
     AccessTokenResponse,
     MessageResponse,
 )
-from fastapi import BackgroundTasks
 from .utils import verify_hash, create_access_token, create_refresh_access_token,create_url_safe_token,decode_url_safe_token,create_hash
 from .dependencies import RefreshTokenBearer, AccessTokenBearer, get_current_user, Rolechecker
 from datetime import datetime, timezone
 from src.db.redis import add_token_to_blocklist
-from src.mail import send_email
 from src.config import Config
 
 auth_router = APIRouter()
@@ -29,7 +27,7 @@ auth_service = Auth_service()
 roles = Rolechecker(["user", "Admin", "Staff"])
 
 @auth_router.post("/signup", response_model=SignupSuccessResponse)
-async def signup(background_tasks: BackgroundTasks, user_data: SignupModel, session: AsyncSession = Depends(get_session)):
+async def signup(user_data: SignupModel, session: AsyncSession = Depends(get_session)):
     await auth_service.check_user_exists(user_data.email, session)
     new_user = await auth_service.create_user(user_data, session)
     token = create_url_safe_token({"email": new_user.email})
@@ -119,6 +117,7 @@ async def send_mail(email_data: EmailModel):
        subject = "Welcome to Losika Pizza!"
        send_email_task.delay(subject=subject, recipients=emails, body=html)
        return {"message": "Email sent successfully to the provided addresses."}
+
 @auth_router.post('/password_reset', response_model=MessageResponse)
 async def password_reset(email_data: PasswordResetRequestModel, session: AsyncSession = Depends(get_session)):
     email = email_data.email
