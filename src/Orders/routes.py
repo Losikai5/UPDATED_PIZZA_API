@@ -43,6 +43,10 @@ async def create_order(order: OrderCreate, session: AsyncSession = Depends(get_s
     )
 
     return create_order  
+@Orders_router.get("/me",response_model=List[OrderRead], dependencies=[role])
+async def get_my_orders(session: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)):
+    my_orders = await order_service.get_orders_by_user_id(current_user.uid, session)
+    return my_orders
 
 @Orders_router.put("/{order_id}", response_model=OrderRead, dependencies=[role])
 async def update_order(order_id: str, order: OrderUpdate, session: AsyncSession = Depends(get_session),current_user =Depends(get_current_user)):
@@ -186,3 +190,4 @@ async def update_order_status(
         )
 
     return updated_order
+

@@ -1,16 +1,23 @@
-import uuid
+from uuid import UUID
 from datetime import datetime
 from sqlmodel import SQLModel
 from src.db.models import NotificationType
+from pydantic import BaseModel
 
-# What we return when reading a notification
-class NotificationRead(SQLModel):
-    uid: uuid.UUID
+class NotificationResponse(BaseModel):
+    uid: UUID
     message: str
     notification_type: NotificationType
     is_read: bool
     created_at: datetime
+    user_uid: UUID
 
-# What we accept when marking a notification as read
-class NotificationUpdateRead(SQLModel):
-    is_read: bool
+    model_config = {"from_attributes": True}
+
+class NotificationCreate(BaseModel):
+    message: str
+    notification_type: NotificationType
+
+
+class NotificationMarkRead(BaseModel):
+    uids: list[UUID]

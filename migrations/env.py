@@ -6,7 +6,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from src.config import Config
 from sqlmodel import SQLModel
-from src.db.models import User,Orders,Reviews
+from src.db.models import User, Orders, Reviews, Notification, MenuItem, MenuItemSize, Cart, CartItem, Address
 from alembic import context
 
 DATABASE_URL = Config.DATABASE_URL

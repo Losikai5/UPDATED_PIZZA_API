@@ -66,4 +66,8 @@ class Rolechecker:
         return True      
 
 
+# Backward-compatible alias for modules importing RoleChecker.
+RoleChecker = Rolechecker
+
+
 
