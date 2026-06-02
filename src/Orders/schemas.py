@@ -1,11 +1,8 @@
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional, List
-from enum import Enum
 import uuid
 from src.Reviews.schemas import ReviewRead
-from src.celery import send_order_accepted_task, send_order_completed_task, send_order_in_transit_task, send_order_in_transit_task,send_order_cancelled_task, send_order_confirmation_task
-from src.db.models import Notification, NotificationType, OrderStatus
 
 
 class OrderCreate(BaseModel):

@@ -20,7 +20,7 @@ from .utils import verify_hash, create_access_token, create_refresh_access_token
 from .dependencies import RefreshTokenBearer, AccessTokenBearer, get_current_user, Rolechecker
 from datetime import datetime, timezone
 from src.db.redis import add_token_to_blocklist
-from src.config import Config
+from src.config import Config, API_VERSION
 
 auth_router = APIRouter()
 auth_service = Auth_service()
@@ -31,7 +31,7 @@ async def signup(user_data: SignupModel, session: AsyncSession = Depends(get_ses
     await auth_service.check_user_exists(user_data.email, session)
     new_user = await auth_service.create_user(user_data, session)
     token = create_url_safe_token({"email": new_user.email})
-    link = f"http://{Config.DOMAIN}/api/v2/auth/verify/{token}"
+    link = f"https://{Config.DOMAIN}/api/{API_VERSION}/auth/verify/{token}"
 
     html_message = f"""
     <h1>Verify your Email</h1>
@@ -111,7 +111,7 @@ async def me(current_user: dict = Depends(get_current_user), _: bool = Depends(r
    return current_user     
 
 @auth_router.post('/send_mail', response_model=MessageResponse)
-async def send_mail(email_data: EmailModel):
+async def send_mail(email_data: EmailModel, _: dict = Depends(AccessTokenBearer())):
        emails = email_data.addresses
        html = "<h1>Welcome to Losika Pizza</h1><p>Thank you for signing up! We're excited to have you on board.</p>"
        subject = "Welcome to Losika Pizza!"
@@ -126,7 +126,7 @@ async def password_reset(email_data: PasswordResetRequestModel, session: AsyncSe
         raise HTTPException(status_code=404, detail="User not found")
 
     token = create_url_safe_token({"email": user.email})
-    link = f"http://{Config.DOMAIN}/api/v2/auth/reset-password?token={token}"
+    link = f"https://{Config.DOMAIN}/api/{API_VERSION}/auth/reset-password?token={token}"
 
     html_message = f"""
     <h1>Password Reset Request</h1>

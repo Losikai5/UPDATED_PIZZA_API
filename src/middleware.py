@@ -6,8 +6,6 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 import time
 import logging
 
-from httpx import request
-
 logger = logging.getLogger("uvicorn.access")
 logger.disabled = True
 app = FastAPI()

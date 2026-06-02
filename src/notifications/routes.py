@@ -26,6 +26,14 @@ async def get_unread_notifications(
 ):
     return await notification_service.get_unread_notifications(current_user.uid, session)
 
+# Mark all notifications as read
+@notification_router.patch("/read-all")
+async def mark_all_notifications_as_read(
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
+):
+    return await notification_service.mark_all_as_read(current_user.uid, session)
+
 # Mark a single notification as read
 @notification_router.patch("/{notification_uid}/read", response_model=NotificationResponse)
 async def mark_notification_as_read(
@@ -34,11 +42,3 @@ async def mark_notification_as_read(
     session: AsyncSession = Depends(get_session)
 ):
     return await notification_service.mark_as_read(notification_uid, current_user.uid, session)
-
-# Mark all notifications as read
-@notification_router.patch("/read-all")
-async def mark_all_notifications_as_read(
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
-):
-    return await notification_service.mark_all_as_read(current_user.uid, session)

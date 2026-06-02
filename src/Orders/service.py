@@ -9,7 +9,8 @@ from sqlmodel import select, desc
 
 
 ALLOWED_TRANSITIONS = {
-        OrderStatus.pending: [OrderStatus.in_transit, OrderStatus.cancelled],
+        OrderStatus.pending: [OrderStatus.order_accepted, OrderStatus.cancelled],
+        OrderStatus.order_accepted: [OrderStatus.in_transit, OrderStatus.cancelled],
         OrderStatus.in_transit: [OrderStatus.completed, OrderStatus.cancelled],
         OrderStatus.completed: [],
         OrderStatus.cancelled: []

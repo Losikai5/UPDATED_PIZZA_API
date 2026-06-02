@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends,HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from src.db.main import get_session
 from src.Reviews.service import ReviewsService
 from src.Orders.service import OrdersService
 from .schemas import ReviewCreate, ReviewRead
 from typing import List
-from src.auth.dependencies import Rolechecker,get_current_user
+from src.auth.dependencies import Rolechecker, get_current_user
+from src.db.models import OrderStatus
 
 
 user_role_checker = Depends(Rolechecker(["user","Admin","Staff"]))
@@ -29,6 +30,8 @@ async def create_review(
         raise HTTPException(status_code=404, detail="Order not found")
     if str(order_obj.user_id) != str(current_user.uid):
         raise HTTPException(status_code=403, detail="You can only review your own order")
+    if order_obj.order_status != OrderStatus.completed:
+        raise HTTPException(status_code=400, detail="You can only review completed orders")
     return await reviews_service.create_review(current_user.uid, orders_id, review, session)
 
 @reviews_router.get("/{review_uid}", response_model=ReviewRead, dependencies=[user_role_checker])

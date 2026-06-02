@@ -11,7 +11,6 @@ class SignupModel(BaseModel):
     first_name: str
     last_name: str
     email: EmailStr
-    role: str
     password: str
 
     model_config = {
@@ -22,7 +21,6 @@ class SignupModel(BaseModel):
                 "first_name": "John",
                 "last_name": "Doe",
                 "email": "johndoe@example.com",
-                "role": "user",
                 "password": "strongpassword123"
             }
         }

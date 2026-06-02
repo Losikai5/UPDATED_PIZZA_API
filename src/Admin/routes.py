@@ -45,7 +45,7 @@ async def set_user_role(
         raise HTTPException(status_code=400, detail="Invalid role")
 
     user = await admin_service.get_user_by_id(user_id, session)
-    return await admin_service.update_user_role(user, {"role": payload.role}, session)
+    return await admin_service.update_user_role(user, payload.role, session)
 
 
 @admin_router.patch("/users/{user_id}/verify", response_model=AdminUserRead, dependencies=[admin_only])

@@ -3,25 +3,23 @@ from .service import OrdersService
 from .schemas import OrderCreate, OrderUpdate, OrderRead, OrderDetailRead
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from src.db.main import get_session
-from src.auth.dependencies import Rolechecker,get_current_user
+from src.auth.dependencies import Rolechecker, get_current_user
 from typing import List
+from pydantic import BaseModel
+from src.db.models import Notification, NotificationType, Orders, OrderStatus
 from src.celery import (
     send_order_accepted_task,
+    send_order_cancelled_task,
+    send_order_confirmation_task,
+    send_order_completed_task,
     send_order_in_transit_task,
-    send_order_completed_task
 )
-from src.db.models import Notification, NotificationType, OrderStatus
-from pydantic import BaseModel
-from src.db.models import NotificationType, Orders, Notification,OrderStatus
-from src.celery import send_order_completed_task, send_order_confirmation_task,send_order_cancelled_task, send_order_accepted_task, send_order_in_transit_task,send_order_in_transit_task,send_order_completed_task   
 
 
 order_service = OrdersService()
 Orders_router = APIRouter()
 role = Depends(Rolechecker(["user", "Admin", "Staff"]))
 workers_role = Depends(Rolechecker(["Admin", "Staff"]))
-
-
 
 
 @Orders_router.get("/", response_model=List[OrderRead], dependencies=[workers_role])
@@ -31,7 +29,6 @@ async def read_orders(session: AsyncSession = Depends(get_session)):
 
 @Orders_router.post("/", response_model=OrderRead, dependencies=[role])
 async def create_order(order: OrderCreate, session: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)):
-    
     create_order = await order_service.create_order(order, session, current_user.uid)
     send_order_confirmation_task.delay(
         recipient=current_user.email,
@@ -41,34 +38,30 @@ async def create_order(order: OrderCreate, session: AsyncSession = Depends(get_s
         quantity=create_order.quantity,
         total_price=create_order.total_price,
     )
+    return create_order
 
-    return create_order  
-@Orders_router.get("/me",response_model=List[OrderRead], dependencies=[role])
+@Orders_router.get("/me", response_model=List[OrderRead], dependencies=[role])
 async def get_my_orders(session: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)):
     my_orders = await order_service.get_orders_by_user_id(current_user.uid, session)
     return my_orders
 
 @Orders_router.put("/{order_id}", response_model=OrderRead, dependencies=[role])
-async def update_order(order_id: str, order: OrderUpdate, session: AsyncSession = Depends(get_session),current_user =Depends(get_current_user)):
-    order_obj =  await session.get(Orders, order_id)
+async def update_order(order_id: str, order: OrderUpdate, session: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)):
+    order_obj = await session.get(Orders, order_id)
     if order_obj is None:
         raise HTTPException(status_code=404, detail="Order not found")
-    if current_user.role != "Admin" and str(order_obj.user_id ) != str(current_user.uid):
-        raise HTTPException(403,detail="You are not allowed to update this order")
-     
-    
+    if current_user.role != "Admin" and str(order_obj.user_id) != str(current_user.uid):
+        raise HTTPException(status_code=403, detail="You are not allowed to update this order")
     update_order = await order_service.update_order(order_id, order, session)
     return update_order
 
 @Orders_router.delete("/{order_id}", dependencies=[role])
-async def delete_order(order_id: str,session: AsyncSession = Depends(get_session),current_user=Depends(get_current_user),):
+async def delete_order(order_id: str, session: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)):
     order_obj = await order_service.get_order_by_id(order_id, session)
     if order_obj is None:
         raise HTTPException(status_code=404, detail="Order not found")
-
     if current_user.role != "Admin" and str(order_obj.user_id) != str(current_user.uid):
         raise HTTPException(status_code=403, detail="You can only delete your own order")
-
     remove_order = await order_service.delete_order(order_id, session)
     return remove_order
 
@@ -89,6 +82,11 @@ async def read_orders_by_user_id(user_id: str, session: AsyncSession = Depends(g
 
 @Orders_router.post("/{order_id}/cancel", response_model=OrderRead, dependencies=[role])
 async def cancel_order(order_id: str, session: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)):
+    order_obj = await order_service.get_order_by_id(order_id, session)
+    if order_obj is None:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if current_user.role != "Admin" and str(order_obj.user_id) != str(current_user.uid):
+        raise HTTPException(status_code=403, detail="You can only cancel your own order")
     order_cancellation = await order_service.cancel_order(order_id, session)
     notification = Notification(
         user_uid=current_user.uid,
@@ -98,7 +96,6 @@ async def cancel_order(order_id: str, session: AsyncSession = Depends(get_sessio
     session.add(notification)
     await session.commit()
     await session.refresh(notification)
-   
     send_order_cancelled_task.delay(
         recipient=current_user.email,
         order_uid=str(order_cancellation.uid),
@@ -107,10 +104,7 @@ async def cancel_order(order_id: str, session: AsyncSession = Depends(get_sessio
         quantity=order_cancellation.quantity,
         total_price=order_cancellation.total_price,
     )
-   
     return order_cancellation
-
-
 
 
 @Orders_router.put("/{order_id}/accept", response_model=OrderRead, dependencies=[workers_role])
@@ -120,17 +114,22 @@ async def accept_order(order_id: str, session: AsyncSession = Depends(get_sessio
         raise HTTPException(status_code=404, detail="Order not found")
     if order_obj.order_status != OrderStatus.pending:
         raise HTTPException(status_code=400, detail="Only pending orders can be accepted")
-    order_obj.order_status = OrderStatus.in_transit
+    order_obj.order_status = OrderStatus.order_accepted
     session.add(order_obj)
     await session.commit()
     await session.refresh(order_obj)
+    notification = Notification(
+        user_uid=order_obj.user_id,
+        message=f"Your order {order_obj.uid} has been accepted and is being prepared!",
+        notification_type=NotificationType.order_accepted,
+    )
+    session.add(notification)
+    await session.commit()
+    if order_obj.user:
+        send_order_accepted_task.delay(recipient=order_obj.user.email, order_uid=str(order_obj.uid))
     return order_obj
 
 
-
-
-
-    
 @Orders_router.put("/{order_id}/delivered", response_model=OrderRead, dependencies=[workers_role])
 async def mark_order_as_delivered(order_id: str, session: AsyncSession = Depends(get_session), current_user=Depends(get_current_user)):
     order_obj = await order_service.get_order_by_id(order_id, session)
@@ -145,8 +144,6 @@ async def mark_order_as_delivered(order_id: str, session: AsyncSession = Depends
     return order_obj
 
 
-
-
 class OrderStatusUpdate(BaseModel):
     order_status: OrderStatus
 
@@ -155,6 +152,13 @@ STATUS_MESSAGES = {
     OrderStatus.order_accepted: "Your order {uid} has been accepted and is being prepared!",
     OrderStatus.in_transit: "Your order {uid} is on the way! Please be ready.",
     OrderStatus.completed: "Your order {uid} has been delivered. Enjoy your meal!",
+}
+
+# Notification types per status
+STATUS_NOTIFICATION_TYPES = {
+    OrderStatus.order_accepted: NotificationType.order_accepted,
+    OrderStatus.in_transit: NotificationType.order_in_transit,
+    OrderStatus.completed: NotificationType.order_completed,
 }
 
 # Celery tasks per status
@@ -172,22 +176,19 @@ async def update_order_status(
 ):
     updated_order = await order_service.update_order_status(order_id, payload.order_status, session)
 
-    # Save notification to database if status has a message
-    if payload in STATUS_MESSAGES:
+    if payload.order_status in STATUS_MESSAGES:
         notification = Notification(
             user_uid=updated_order.user_id,
-            message=STATUS_MESSAGES[payload].format(uid=updated_order.uid),
-            notification_type=NotificationType.order_placed,
+            message=STATUS_MESSAGES[payload.order_status].format(uid=updated_order.uid),
+            notification_type=STATUS_NOTIFICATION_TYPES[payload.order_status],
         )
         session.add(notification)
         await session.commit()
 
-        # Fire the right Celery email task
-        user = updated_order.user  # available because of selectin loading
+        user = updated_order.user
         STATUS_TASKS[payload.order_status].delay(
             recipient=user.email,
             order_uid=str(updated_order.uid),
         )
 
     return updated_order
-

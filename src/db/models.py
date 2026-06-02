@@ -1,7 +1,7 @@
 from sqlmodel import SQLModel, Field, Column, func, Relationship
 from typing import Optional,List
 import uuid
-from datetime import datetime 
+from datetime import datetime, timezone
 import sqlalchemy.dialects.postgresql as pg
 from enum import Enum  
 from sqlalchemy import Column, Enum as SAEnum, ForeignKey  # SAEnum is SQLAlchemy's Enum, not Python's
@@ -85,7 +85,7 @@ class Notification(SQLModel, table=True):
     message: str
     notification_type: NotificationType
     is_read: bool = Field(default=False)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     user_uid: uuid.UUID = Field(foreign_key="users.uid")
     user: Optional["User"] = Relationship(back_populates="notifications", sa_relationship_kwargs={"lazy": "selectin"})
 
