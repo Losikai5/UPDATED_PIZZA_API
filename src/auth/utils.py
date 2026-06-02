@@ -1,4 +1,4 @@
-from passlib.context  import CryptContext
+import bcrypt
 import jwt
 from datetime import timedelta,datetime, timezone
 import uuid
@@ -6,16 +6,15 @@ import logging
 from src.config import Config
 from itsdangerous import URLSafeTimedSerializer
 
-pwd_hash = CryptContext(schemes=["bcrypt"],deprecated = "auto")
 ACCESS_TIME_MINUTES = 60
 serializer = URLSafeTimedSerializer(Config.JWT_SECRET,salt="email-confirmation-salt")
 
 
-def create_hash(password: str):
-    return pwd_hash.hash(password)
+def create_hash(password: str) -> str:
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
-def verify_hash(password: str, hashed_password: str):
-    return pwd_hash.verify(password, hashed_password)
+def verify_hash(password: str, hashed_password: str) -> bool:
+    return bcrypt.checkpw(password.encode(), hashed_password.encode())
 
 def create_access_token(user:dict,expiry:timedelta = None,refresh:bool=False):
      payload = {

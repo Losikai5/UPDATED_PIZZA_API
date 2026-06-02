@@ -20,7 +20,8 @@ class Auth_service:
     async def create_user(self, user_data: SignupModel, session: AsyncSession):
         new_user = User(
             **user_data.model_dump(exclude={"password"}),
-            password_hash=create_hash(user_data.password)
+            password_hash=create_hash(user_data.password),
+            role="user"
         )
         session.add(new_user)
         await session.commit()
